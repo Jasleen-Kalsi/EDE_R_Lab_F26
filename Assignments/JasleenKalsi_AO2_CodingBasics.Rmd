@@ -154,7 +154,7 @@ Add a table of contents to your document and knit to a PDF. Submit your PDF to C
 
 ### Github link
 
-> Answer:
+> Answer:<https://github.com/Jasleen-Kalsi/EDE_R_Lab_F26/blob/main/Assignments/JasleenKalsi_AO2_CodingBasics.Rmd>
 
 
 **NOTE** Before knitting, you'll need to comment out the call to the function in Q13 that does not work. (A document can't knit if the code it contains causes an error!)
