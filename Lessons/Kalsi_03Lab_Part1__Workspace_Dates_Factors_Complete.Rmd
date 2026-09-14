@@ -64,10 +64,10 @@ file.exists(filename)
 
 #A tidied read.csv command
 usgs_flow_data <- read.csv(
-  file = here('Data','Raw','USGS_Site02085000_Flow_Raw.csv')
+  file = here('Data','Raw','USGS_Site02085000_Flow_raw.csv')
 )
 
-#Create and print a list of all files in a folder using "dir" and "here"
+#Create and print a list of all files in data raw folder using "dir" and "here"
 filenames <- dir(here('Data','Raw'),pattern = ("*.csv"))
 print(filenames)
 ```
@@ -87,10 +87,10 @@ NTL_data <- read.csv(
 
 # 2.Read in all CSV files starting with "EPAair_03" into a single dataframe
 folder <- here('Data','Raw')
-files <- dir(folder, pattern = "EPAair_O3*.*", full.names = TRUE)
+files <- dir(folder, pattern = "EPAair_O3*.*", full.names = TRUE) ##data has to have same columns and same names so dataset can make sense
 EPAData <- files %>%
-  map(read.csv) %>%
-  bind_rows()
+  map(read.csv) %>% ## read two csvs
+  bind_rows() #binds csv's
 
 ```
 
@@ -111,8 +111,8 @@ Remember formatting of dates in R:
 # (code must be uncommented)
 today <- Sys.Date()
 format(today, format = "%B")
-#format(today, format = "")
-#format(today, format = "")
+format(today, format = "%d")
+format(today, format = "%d%y%m")
 #format(today, format = "")
 
 ```
@@ -128,7 +128,7 @@ More info on lubridate [here][<https://cran.r-project.org/web/packages/lubridate
 library(lubridate)
 
 #Ex1
-str_today <- "2026-sep-10"
+str_today <- "2026-sep-10" #%Y-%b-%d
 #Since the format is year-month-day we will use function ymd()
 date_obj_today <- ymd(str_today)
 date_obj_today
@@ -235,6 +235,7 @@ unique(sites$dow)
 
 #Summary - is it meaningful?
 summary(sites$dow)
+
 
 ```
 
