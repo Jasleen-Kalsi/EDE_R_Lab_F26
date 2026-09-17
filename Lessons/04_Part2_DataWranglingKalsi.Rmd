@@ -19,8 +19,8 @@ editor_options:
 ```{r setup workspace, message = FALSE}
 library(tidyverse)
 
-NTL.phys.data.PeterPaul <- read.csv(
-  here("Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
+processedpeter <- read.csv(
+  here("Data/Processed/processedpeter.csv")
   )
 
 NTL.nutrient.data <- read.csv(
@@ -33,20 +33,20 @@ NTL.nutrient.data <- read.csv(
 
 ```{r explore physical data}
 # Data summaries for physical data
-colnames(NTL.phys.data.PeterPaul)
-dim(NTL.phys.data.PeterPaul)
-glimpse(NTL.phys.data.PeterPaul)
-class(NTL.phys.data.PeterPaul$sampledate)
+colnames(processedpeter)
+dim(processedpeter)
+glimpse(processedpeter)
+class(processedpeter$sampledate)
 
 # Always need to fix date object even if it comes form a processed file
-NTL.phys.data.PeterPaul$sampledate <- ymd(NTL.phys.data.PeterPaul$sampledate)
+processedpeter$sampledate <- ymd(processedpeter$sampledate)
 
 #Parsing date object for nutrient data set
 class(NTL.nutrient.data$sampledate)
 NTL.nutrient.data$sampledate <- ymd(NTL.nutrient.data$sampledate)
 
 #Converting lakename to factor in both data frames
-NTL.phys.data.PeterPaul$lakename <- as.factor(NTL.phys.data.PeterPaul$lakename)
+processedpeter$lakename <- as.factor(processedpeter$lakename)
 NTL.nutrient.data$lakename <- as.factor(NTL.nutrient.data$lakename)
 
 ```
@@ -95,8 +95,8 @@ NTL.nutrient.data.PeterPaul <-
   drop_na(depth)
 
 # Remove columns that are not of interest for analysis
-NTL.phys.data.PeterPaul.subset <- select(
-  NTL.phys.data.PeterPaul,
+processedpeter.subset <- select(
+  processedpeter,
   lakename:irradianceDeck)
   
 NTL.nutrient.data.PeterPaul.subset <- select(
@@ -104,7 +104,7 @@ NTL.nutrient.data.PeterPaul.subset <- select(
   lakename, year4, daynum, sampledate, depth:po4)
 
 # Write a more succinct line of code to subset the nutrient dataset. 
-
+NTL.nutrient.data.PeterPaul.subset <- select(NTL.nutrient.data.PeterPaul, lakename:po4)
 
 # Or using pipe
 NTL.nutrient.data.PeterPaul.subset <- 
@@ -141,6 +141,7 @@ NTL.nutrient.data.PeterPaul.long <- NTL.nutrient.data.PeterPaul.subset %>%
     names_to = "nutrient",
     values_to = "concentration"
   )
+## move values from columns into a pair of name and value columns. UG-po4 nutrient columns will be converted into rows. value of columns will turn into values in the concentration column. 
 
 count(NTL.nutrient.data.PeterPaul.long, nutrient)
 
@@ -155,6 +156,8 @@ NTL.nutrient.data.PeterPaul.wide <-
     names_from = nutrient,
     values_from = concentration
     )
+
+# takes us back to what we had originally.
 
 ```
 
@@ -176,9 +179,11 @@ Let's say we want to generate a new dataset that contains all possible physical 
 ```{r joining data}
 
 NTL.phys.nutrient.data.PeterPaul <- full_join(
-  NTL.phys.data.PeterPaul.subset,
+  processedpeter.subset,
   NTL.nutrient.data.PeterPaul.subset
   )
+
+## looks for columns that have same name
 
 write.csv(
   NTL.phys.nutrient.data.PeterPaul, 
@@ -196,15 +201,15 @@ dplyr functionality, combined with the pipes operator, allows us to split datase
 NTL.PeterPaul.summaries <- 
   NTL.phys.nutrient.data.PeterPaul %>%
   filter(depth == 0) %>%
-  group_by(lakename, year4) %>%
-  filter(!is.na(temperature_C) & !is.na(tn_ug) & !is.na(tp_ug)) %>%
+  group_by(lakename, year4) %>% ##trying to get summaries for each lake and each year
+  filter(!is.na(temperature_C) & !is.na(tn_ug) & !is.na(tp_ug)) %>% ##filter out nas
   summarise(meantemp = mean(temperature_C), 
             sdtemp = sd(temperature_C), 
             meanTN = mean(tn_ug), 
             sdTN = sd(tn_ug), 
             meanTP = mean(tp_ug), 
             sdTP = sd(tp_ug),
-            .groups = "drop"
+            .groups = "drop" 
             )
 
 write.csv(

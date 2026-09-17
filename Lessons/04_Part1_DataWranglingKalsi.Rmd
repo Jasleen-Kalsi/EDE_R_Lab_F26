@@ -26,6 +26,7 @@ Opening discussion: why might we be interested in long-term observations of temp
 
 ```{r setup workspace, message = FALSE}
 library(tidyverse)
+library(here)
 
 NTL.phys.data <- read.csv(
   here("Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
@@ -169,9 +170,11 @@ NTL.phys.data.JunethruOctober4 <- filter(NTL.phys.data, daynum %in% c(152:304))
 # what code do you need to use, based on the class of the variable?
 class(NTL.phys.data$year4)
 
+year1999 <- filter(NTL.phys.data, year4 ==1999)
+
 # Exercise: 
 # filter NTL.phys.data for Tuesday Lake from 1990 through 1999.
-
+years90to99 <- filter(NTL.phys.data, year4 %in% c(1990:1999))
 
 ```
 Question: Why don't we filter using row numbers?
@@ -188,6 +191,8 @@ NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
 
 # Exercise: 
 # Arrange NTL.phys.data by temperature, in descending order. 
+
+tempdesc <- arrange(NTL.phys.data, desc(temperature_C))
 # Which dates, lakes, and depths have the highest temperatures?
 
 
@@ -205,7 +210,7 @@ NTL.phys.data.temps <- select(NTL.phys.data, lakename, sampledate:temperature_C)
 Mutating allows us to add new columns that are functions of existing columns. Operations include addition, subtraction, multiplication, division, log, and other functions.
 
 ```{r mutating data}
-NTL.phys.data.temps <- mutate(NTL.phys.data.temps, temperature_F = (temperature_C*9/5) + 32)
+farenheit <- mutate(NTL.phys.data.temps, temperature_F = (temperature_C*9/5) + 32)
 
 ```
 
@@ -216,7 +221,7 @@ Sometimes we will want to perform multiple functions on a single dataset on our 
 Let's say we want to take our raw dataset (NTL.phys.data), *then* filter the data for Peter and Paul lakes, *then* select temperature and observation information, and *then* add a column for temperature in Fahrenheit: 
 
 ```{r using pipes}
-NTL.phys.data.PeterPaul.processed <- 
+processed <- 
   NTL.phys.data %>%
   filter(lakename %in% c("Paul Lake", "Peter Lake")) %>%
   select(lakeid:irradianceDeck) %>%
