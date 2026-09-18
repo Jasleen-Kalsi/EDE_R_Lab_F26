@@ -1,6 +1,6 @@
 ---
 title: "Assignment 4: Data Wrangling"
-author: "Student Name"
+author: "Jasleen Kalsi"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -36,21 +36,47 @@ file for information about the variables and measurements.
 
 ```{r setup questions 1-2, message = FALSE}
 #1a 
+library(tidyverse)
+library(here)
 
 
 #1b 
-
+here()
 
 #1c 
 
 
+folder <- here('Data','Raw')
+epafiles <- dir(folder, pattern = "EPAair*.*", full.names = TRUE)
+EPAData <- epafiles %>%
+  map(read.csv)
+
 #2 
+
+
+colnames(EPAData[[1]])
+colnames(EPAData[[2]])
+colnames(EPAData[[3]])
+colnames(EPAData[[4]])
+
+dim(EPAData[[1]])
+dim(EPAData[[2]])
+dim(EPAData[[3]])
+dim(EPAData[[4]])
+
+glimpse(EPAData[[1]])
+glimpse(EPAData[[2]])
+glimpse(EPAData[[3]])
+glimpse(EPAData[[4]])
+
+
 
 
 ```
 
 > All four datasets should have the same number of columns (PM2.5 has one extra column),
 but unique record counts (rows). Do your datasets follow this pattern?
+Yes. 
 
 ## Wrangle individual datasets to create processed files.
 
@@ -66,13 +92,25 @@ AQS.Parameter.Description, County, Site.Latitude, Site.Longitude
 
 ```{r questions 3 thru 5}
 #3
-
+EPAData[[1]]$Date <- mdy(EPAData[[1]]$Date)
+EPAData[[2]]$Date <- mdy(EPAData[[2]]$Date)
+EPAData[[3]]$Date <- mdy(EPAData[[3]]$Date)
+EPAData[[4]]$Date <- mdy(EPAData[[4]]$Date)
 
 #4
-
+glimpse(EPAData[[1]])
+dataset1 <-EPAData[[1]] %>%
+  select(Date, Daily.AQI.Value, Local.Site.Name, AQS.Parameter.Description, County, Site.Latitude, Site.Longitude)
+dataset2 <-EPAData[[2]] %>%
+  select(Date, Daily.AQI.Value, Local.Site.Name, AQS.Parameter.Description, County, Site.Latitude, Site.Longitude)
+dataset3 <-EPAData[[3]] %>%
+  select(Date, Daily.AQI.Value, Local.Site.Name, AQS.Parameter.Description, County, Site.Latitude, Site.Longitude)
+dataset4 <-EPAData[[4]] %>%
+  select(Date, Daily.AQI.Value, Local.Site.Name, AQS.Parameter.Description, County, Site.Latitude, Site.Longitude)
 
 #5
-
+dataset3$AQS.Parameter.Description <- "PM2.5"
+dataset4$AQS.Parameter.Description <- "PM2.5"
 
 ```
 
@@ -83,7 +121,29 @@ AQS.Parameter.Description, County, Site.Latitude, Site.Longitude
 ```{r question 6}
 #6 
 
+write.csv(
+ dataset1, 
+  row.names = FALSE,
+  file = here("Data/Processed/dataset1.csv")
+)
 
+write.csv(
+ dataset2, 
+  row.names = FALSE,
+  file = here("Data/Processed/dataset2.csv")
+)
+
+write.csv(
+ dataset3, 
+  row.names = FALSE,
+  file = here("Data/Processed/dataset3.csv")
+)
+
+write.csv(
+ dataset4, 
+  row.names = FALSE,
+  file = here("Data/Processed/dataset4.csv")
+)
 ```
 
 
@@ -97,6 +157,11 @@ identical first.
 ```{r question 7}
 #7 
 
+folder <- here('Data','Processed')
+epafiles <- dir(folder, pattern = "dataset*.*", full.names = TRUE)
+epacombined <- epafiles %>%
+  map(read.csv) %>% ## read two csvs
+  bind_rows() #binds csv's
 
 ```
 
@@ -125,6 +190,37 @@ following conditions:
 ```{r question 8}
 #8 
 
+library(dplyr)
+
+glimpse(epacombined)
+colSums(is.na(epacombined))
+head(epacombined$Date, 20)
+newdataset <- epacombined |>
+  filter(Local.Site.Name %in% c(
+    "Linville Falls",
+    "Durham Armory",
+    "Leggett",
+    "Hattie Avenue",
+    "Clemmons Middle",
+    "Mendenhall School",
+    "Frying Pan Mountain",
+    "West Johnston Co.",
+    "Garinger High School",
+    "Castle Hayne",
+    "Pitt Agri. Center",
+    "Bryson City",
+    "Millbrook School"
+  )) |>
+  filter(!is.na(Date)) |>
+    mutate(
+   Date = ymd(Date),
+  month = month(Date),
+  year = year(Date)      
+  ) |> group_by(Date, year, month, Local.Site.Name, AQS.Parameter.Description, County)|>
+  summarise(meanAQI = mean(Daily.AQI.Value),
+            meanlatitude = mean(Site.Latitude),
+            meanlongitude = mean(Site.Longitude), 
+            .groups = 'drop')
 
 ```
 
@@ -137,11 +233,16 @@ columns. Each location-date combination should occupy one row.
 
 ```{r questions 9-10}
 #9
-
+newdatasetwider <- newdataset |> 
+  pivot_wider(
+    names_from = AQS.Parameter.Description,
+    values_from = meanAQI
+    )
+newdatasetwider
 
 #10
 
-
+dim(newdatasetwider)
 ```
 
 ### Question 11
@@ -150,7 +251,10 @@ columns. Each location-date combination should occupy one row.
 
 ```{r question 11}
 #11
-
+write.csv(newdatasetwider, 
+          row.names = FALSE, 
+          file = here("Data/Processed/EPAair_O3_PM25_NC2425_Processed.csv")
+)
 
 ```
 
@@ -168,9 +272,17 @@ missing. Mean PM2.5 may remain missing.
 ```{r questions 12 and 13}
 #12
 
-
+monthlysummary <- newdatasetwider |>
+ filter(!is.na(Ozone) & !is.na(PM2.5)) |>
+  group_by(Local.Site.Name, month, year) |>
+  summarise(
+    meanozone= mean(Ozone),
+    meanpm2 =mean(PM2.5),
+    .groups = 'drop'
+  )
+  
 #13
-
+dim(monthlysummary)
 
 ```
 
@@ -179,4 +291,4 @@ missing. Mean PM2.5 may remain missing.
 14. Why is `drop_na(mean_ozone)` more appropriate here than `na.omit()`? Test
 both approaches and compare the dimensions of the resulting summary data frames.
 
-> Answer: 
+> Answer: drop_na(mean_ozone) is more appropriate because it removes only observations where mean ozone is missing, while na.omit() removes observations with missing values in any column. na.omit() gets rid of observations that have ozone data but are missing values for other variables.

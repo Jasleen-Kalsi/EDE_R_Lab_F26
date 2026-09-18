@@ -221,7 +221,7 @@ Sometimes we will want to perform multiple functions on a single dataset on our 
 Let's say we want to take our raw dataset (NTL.phys.data), *then* filter the data for Peter and Paul lakes, *then* select temperature and observation information, and *then* add a column for temperature in Fahrenheit: 
 
 ```{r using pipes}
-processed <- 
+processedpeter <- 
   NTL.phys.data %>%
   filter(lakename %in% c("Paul Lake", "Peter Lake")) %>%
   select(lakeid:irradianceDeck) %>%
@@ -235,9 +235,9 @@ Notice that we did not place the dataset name inside the wrangling function but 
 
 ```{r exporting data}
 write.csv(
-  NTL.phys.data.PeterPaul.processed, 
+ processedpeter, 
   row.names = FALSE,
-  file = here("Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
+  file = here("Data/Processed/processedpeter.csv")
 )
 ```
 
